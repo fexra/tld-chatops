@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/turtlecoin/tld-chatops#readme",
   "dependencies": {
+    "@octokit/request": "^3.0.2",
     "@octokit/rest": "^16.25.3",
     "discord.js": "^11.4.2",
     "http": "^0.0.0",

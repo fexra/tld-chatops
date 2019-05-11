@@ -14,7 +14,11 @@
     "388916188715155467",
     "408364361598369802"
   ],
+  "githubOwner": "fexra",
+  "githubRepo": ".trtl",
+  "githubHead": "fexra:master",
+  "githubBase": "master",
   "githubAuth": "",
-  "githubAgent": "",
+  "githubAgent": ".trtl DNS Bot",
   "githubTimeout": 0
 }

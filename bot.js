@@ -13,9 +13,9 @@ const Address6 = require(`ip-address`).Address6;
 const Sqlite3 = require(`sqlite3`);
 const Discord = require(`discord.js`);
 const Octokit = require(`@octokit/rest`);
+const octokitRequest = require("@octokit/request");
 
 // Setup HTTP server for webhooks and poop
-
 http
   .createServer(function(req, res) {
     var addr = this.address();
@@ -53,7 +53,7 @@ const db = new Sqlite3.Database(Config.database, err => {
 // Connect to Github
 const octokit = Octokit({
   auth: Config.githubAuth,
-  userAgent: Config.githubAgent,
+  //userAgent: Config.githubAgent,
   baseUrl: `https://api.github.com`,
   log: {
     debug: () => {},
@@ -62,7 +62,7 @@ const octokit = Octokit({
     error: log
   },
   request: {
-    agent: undefined,
+    //agent: Config.githubAgent,
     fetch: undefined,
     timeout: Config.githubTimeout
   }
@@ -87,6 +87,52 @@ function isGod(id) {
     return false;
   }
   return true;
+}
+
+function getIssue(id) {
+  octokit.issues
+    .get({
+      owner: Config.githubOwner,
+      repo: Config.githubRepo,
+      issue_number: id
+    })
+    .then(({ data }) => {
+      console.log(data);
+      gv;
+    });
+}
+
+//Only users with push access can set labels for new issues. Labels are silently dropped otherwise.
+function createIssue(
+  githubName,
+  discordName,
+  userEmail,
+  domainName,
+  domainType,
+  serverIP,
+  purpose
+) {
+  Octokit.issues
+    .create({
+      owner: Config.githubOwner,
+      repo: Config.githubRepo,
+      title: `[REQUEST] ${domainName}`,
+      body: `
+        Webmaster Github: ${githubName} /n
+        Webmaster Discord: ${discordName} /n
+        Webmaster Email: ${userEmail} /n
+        Webmaster Github: ${githubName} /n
+        Domain: ${domainName} /n
+        Domain Type: ${domainType} /n
+        Your server IP address: ${serverIP} /n
+        Purpose: ${purpose}
+      `,
+      labels: `REQUEST`
+    })
+    .then(data => {
+      console.log(data);
+      return tryMessageReact(receivedMessage, `Issue ${data}`);
+    });
 }
 
 // Set our DNS server(s) to those for the .trtl TLD
@@ -202,10 +248,15 @@ function commandHandler(receivedMessage) {
   switch (primaryCommand.toLowerCase()) {
     case `help`:
       return helpCommand(receivedMessage);
+
+    case `apply`:
+      return applyDNSRecord(args, receivedMessage);
+
     case `register`:
       return registerCommand(args, receivedMessage);
     case `check`:
       return checkDomainARecord(args, receivedMessage);
+
     case `accept`:
       return applyDNSRecord(args, receivedMessage);
     case `reject`:
@@ -252,7 +303,7 @@ function registerCommand(args, receivedMessage) {
 
   /* Verify that our first argument is indeed one of the record types that
      we know how to handle or exit early */
-  if (recordTypes.indexOf(args[0].toUpperCase()) === -1) {
+  if (recordTypes.indexOf(args[3].toUpperCase()) === -1) {
     tryChannelSendMessage(
       receivedMessage.channel,
       `This is not a record type I understand yet. Options: "A", "TXT", "CNAME".`
@@ -270,8 +321,10 @@ function registerCommand(args, receivedMessage) {
   ]; // Community suffixes we handle
 
   const validDomain = freeTierCommunities.some(domain =>
-    args[1].toLowerCase().endsWith(domain)
+    args[2].toLowerCase().endsWith(domain)
   );
+
+  //Validate IP
 
   // zpalm's validation
   if (!validDomain) {
@@ -280,6 +333,7 @@ function registerCommand(args, receivedMessage) {
       `This is not a community suffix I recognize yet. Options: `.fork.trtl`, `
         .pool.trtl`, `.user.trtl`, `.node.trtl`, `.dev.trtl`, `.bot.trtl``
     );
+
     return tryMessageReact(receivedMessage, `🐢`);
   } else {
     tryChannelSendMessage(receivedMessage.channel, `**[PASS]** Suffix type `);
@@ -333,8 +387,37 @@ function checkDomainARecord(args, receivedMessage) {
     });
 }
 
-// Apply submitted DNS record
+// Apply DNS record
 function applyDNSRecord(args, receivedMessage) {
+  if (args.length < 6) {
+    tryChannelSendMessage(
+      receivedMessage.channel,
+      `Not enough values to register. The syntax should be ".trtl apply <GITHUB_USERNAME> <EMAIL> <SOURCE/VALUE> <TYPE> <DESTINATION>`
+    );
+    return tryMessageReact(receivedMessage, `💩`);
+  }
+  if (args.length > 6) {
+    tryChannelSendMessage(
+      receivedMessage.channel,
+      `Not enough values to register. The syntax should be ".trtl apply <GITHUB_USERNAME> <EMAIL> <SOURCE/VALUE> <TYPE> <DESTINATION>`
+    );
+    return tryMessageReact(receivedMessage, `💩`);
+  }
+  if (args.length === 6) {
+    createIssue(
+      receivedMessage.guild.member.displayName,
+      args[0], // Github Username
+      args[1], // Email
+      args[2], // Domain name
+      args[3], // Domain Types
+      args[4], // Server IP
+      args[5] // Purpopse
+    );
+  }
+}
+
+// Accept submitted DNS record
+function acceptDNSRecord(args, receivedMessage) {
   // Respect my authoritah
   if (isGod(message.author.id)) {
     // Do logic here
