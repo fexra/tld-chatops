@@ -1,3 +1,5 @@
+db.sqlite
+
 ### Windows template
 # Windows thumbnail cache files
 Thumbs.db
@@ -165,3 +167,4 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 test.js
+
