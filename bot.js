@@ -78,6 +78,7 @@ function run(query, args) {
   });
 }
 
+// Logger
 function log(message) {
   console.log(util.format(`%s: %s`, new Date().toUTCString(), message));
 }
@@ -89,6 +90,7 @@ function isGod(id) {
   return true;
 }
 
+// Fetch single issue
 function getIssue(id) {
   octokit.issues
     .get({
@@ -102,7 +104,8 @@ function getIssue(id) {
     });
 }
 
-//Only users with push access can set labels for new issues. Labels are silently dropped otherwise.
+// Create a Issue
+// Only users with push access can set labels for new issues. Labels are silently dropped otherwise.
 function createIssue(
   githubName,
   discordName,
