@@ -26,6 +26,7 @@
   "dependencies": {
     "@octokit/rest": "^16.25.3",
     "discord.js": "^11.4.2",
+    "http": "^0.0.0",
     "ip-address": "^5.9.0",
     "sqlite3": "^4.0.7"
   },
